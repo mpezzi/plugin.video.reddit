@@ -46,6 +46,7 @@ def get_params():
 
 def XBMC_PATH(path, filename):
   translatedpath = os.path.join(xbmc.translatePath( path ), ''+filename+'')
+  translatedpath = re.sub(' ', '\ ', translatedpath)
   return translatedpath
 
 def ADD_DIRECTORY_ITEM(name, parameters = {}, isFolder = True, icon = 'DefaultVideo.png'):
@@ -71,6 +72,11 @@ def SUBREDDIT_ITEMS(subreddit):
 
 def PLAY(url):
   print url
+  #script = 'python ' + XBMC_PATH(addonpath, "youtube-dl.py") + ' -g ' + url
+  #print script
+  #video_url = os.popen(script).read()
+  #print video_url
+  #print xbmc.executebuiltin('XBMC.RunScript(' + path + ', -g, ' + url + ')')
 
 # Addons
 addon = xbmcaddon.Addon(id='plugin.video.reddit')
