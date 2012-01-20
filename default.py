@@ -6,6 +6,9 @@ import sys, re, os
 import xbmc, xbmcgui, xbmcplugin, xbmcaddon
 import urllib, urllib2
 import simplejson as json
+import YouTubeCore
+
+YouTubeCore = YouTubeCore.YouTubeCore()
 
 __plugin__ = "Reddit"
 __credits__ = "Alex Pezzi alexpezzi@gmail.com"
@@ -14,6 +17,10 @@ __version__ = "1.0"
 # Reddit Configuration.
 REDDIT_FEED_URL = 'http://www.reddit.com/r/'
 REDDIT_FEED_SUBREDDITS = ['videos', 'funny', 'tech', 'gaming', 'AWW', 'WTF', 'music', 'listen', 'TIL', 'PBS', 'TED', 'politics', 'atheism', 'sports', 'documentaries']
+REDDIT_FEED_LIMIT = 100
+
+# Youtube Playback
+YOUTUBE_EMBED_STREAM = 'http://www.youtube.com/get_video_info?video_id=%s'
 
 # Addon Modes
 MODE_ROOT = 0
@@ -41,7 +48,7 @@ def get_params():
       splitparams=pairsofparams[i].split('=')
       if (len(splitparams))==2:
         param[splitparams[0]]=splitparams[1]
-                                
+
   return param
 
 def XBMC_PATH(path, filename):
@@ -62,21 +69,39 @@ def SUBREDDIT():
 
 # Get Subreddit channel.
 def SUBREDDIT_ITEMS(subreddit):
-  data = json.load(urllib.urlopen(REDDIT_FEED_URL + subreddit + '/.json')) 
-  
+  data = json.load(urllib.urlopen(REDDIT_FEED_URL + subreddit + '/.json?limit=' + REDDIT_FEED_LIMIT)) 
+
   videos = []
   for item in data['data']['children']:
     if item['data']['domain'] == 'youtube.com':
+      url = item['data']['url']
       ADD_DIRECTORY_ITEM(item['data']['title'], parameters = { PARAMETER_KEY_MODE: MODE_PLAY_VIDEO, PARAMETER_KEY_URL: item['data']['url'] }, isFolder = False, icon = item['data']['thumbnail'])
   xbmcplugin.endOfDirectory( handle = handle, succeeded = True )
 
 def PLAY(url):
-  print url
-  #script = 'python ' + XBMC_PATH(addonpath, "youtube-dl.py") + ' -g ' + url
-  #print script
-  #video_url = os.popen(script).read()
-  #print video_url
-  #print xbmc.executebuiltin('XBMC.RunScript(' + path + ', -g, ' + url + ')')
+  player_object = {}
+  video = {}
+  links = []
+
+  videoid = YouTubeCore.video_id(url)
+  (result, status) = YouTubeCore._fetchPage(link = YOUTUBE_EMBED_STREAM % videoid)
+
+  if result.find('status=fail') > -1:
+    return
+
+  if status == 200:
+    player_object = YouTubeCore._convertFlashVars(result)
+
+  # Find playback URI
+  if player_object.has_key('PLAYER_CONFIG'):
+    if player_object['PLAYER_CONFIG'].has_key('args'):
+      if player_object['PLAYER_CONFIG']['args'].has_key('ttsurl'):
+        video['ttsurl'] = player_object['PLAYER_CONFIG']['args'].has_key('ttsurl')
+
+      links = YouTubeCore.getVideoUrlMap(player_object["PLAYER_CONFIG"], video)
+      video_url = YouTubeCore.selectVideoQuality(links)
+      xbmc.Player(xbmc.PLAYER_CORE_DVDPLAYER).play(video_url)
+
 
 # Addons
 addon = xbmcaddon.Addon(id='plugin.video.reddit')
@@ -114,4 +139,3 @@ elif mode == MODE_SUBREDDIT:
   SUBREDDIT_ITEMS(subreddit)
 elif mode == MODE_PLAY_VIDEO:
   PLAY(url)
-  
