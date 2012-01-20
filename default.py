@@ -69,7 +69,7 @@ def SUBREDDIT():
 
 # Get Subreddit channel.
 def SUBREDDIT_ITEMS(subreddit):
-  data = json.load(urllib.urlopen(REDDIT_FEED_URL + subreddit + '/.json?limit=' + REDDIT_FEED_LIMIT)) 
+  data = json.load(urllib.urlopen(REDDIT_FEED_URL + subreddit + '/.json?limit=' + REDDIT_FEED_LIMIT))
 
   videos = []
   for item in data['data']['children']:
