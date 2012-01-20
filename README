@@ -1,5 +1,5 @@
 XBMC Reddit Plugin
 
-Plugin for XBMC or Boxee to provide Reddit video content.
+Plugin for XBMC to provide Reddit video content.
 
-Move to plugins/video directory of XBMC or Boxee then update sources.xml
+Move to addons directory of XBMC
